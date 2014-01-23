@@ -1,0 +1,15 @@
+{
+    "contents" : "### Prior Checks code\n## function to simulate Orthogonal Matrices\nrequire(\"far\")\nlibrary(\"truncnorm\")\nrequire(\"MCMCpack\")\nsim_psimat<-function(k,p,psi_v) ## output a p by k matrix ( k < p)\n{\n  repeat\n  {\n    val=runif(k*p)\n    prob<-cumsum(c(psi_v^2, 2*psi_v*(1-psi_v), (1-psi_v)^2))\n    lw <- (val <= prob[1])\n    mid<- (val <= prob[2] & val > prob[1])\n    hig<- (val > prob[2])\n    ot <- numeric(n*m)\n    if(any(lw)) ot[lw]<- -sqrt(1/psi_v)\n    if(any(mid)) ot[mid]<- 0\n    if(any(hig)) ot[hig]<- sqrt(1/psi_v)\n    u <- matrix(ot,nrow=p,ncol=k)\n    test <- (prod(abs(La.svd(u)$d) > 1e-08) == 0) \n    if(!test) { break }\n  }\n  out=orthonormalization(u,basis=F,norm=T)\n  return(out)    \n}\n\n### lower triangular mat\ntriangl <-function(k,d,pam1,pam2) ##pam1=al1,al1 (parameter of the beta), pam2=al,bet parameters of the gamma\n{\nmat <- matrix(0,nrow=k,ncol=d)\npivl <- rbeta(d,shape1=pam1[1],shape2=pam1[2])\nsig <- 1/rgamma(n=d,shape=pam2[1],scale=pam2[2]) \nfor(i in 1:k)\n{\nfor(j in 1:min(i,d)) \n{\nbin <-rbinom(n=1,size=1,prob=pivl[j])  \nif(j < i)  \n{mat[i,j] <- bin*rnorm(n=1,sd=sqrt(sig[j])) }\nelse\n{\nmat[i,i] <- rtruncnorm(n=1,a=0,mean=0,sd=sqrt(sig[j]))\n}   \n}\n}\nreturn(mat)\n}  \n\n### \nk=5\np=20\nq=20\nd=3\nsigte=1\nSigte <-diag(rep(sigte,p))\nsiglb=1\nSiglb <-diag(rep(siglb,q))\n\ntaul <- 1\npi <-rbeta(n=1,shape1=1,shape2=1)\n## simulate A\nA <- triangl(k,d,c(1,1),c(1,1)); B <- triangl(k,d,c(1,1),c(1,1))\n\n### orthoganl matrix\nmat1 <- sim_psimat(k=3,p=5,psi_v=.95) ## output a p by k matrix ( k < p)\nmat2 <- sim_psimat(k,q,psi_v=.95) ## output a p by k matrix ( k < p)\n## Approximate distribution of correlation estimates\nN=5000\nout <-NULL\n\nfor(i in 1:N)\n{\nVm<- riwish(d+2,diag(rep(1,d)))\nA <- triangl(k,d,c(10,1),c(1,1)); B <- triangl(k,d,c(10,1),c(1,1))\nvar_te <- mat1%*%A%*%Vm%*%t(mat1%*%A) + diag(rep(1,p))\nvar_lb <- mat2%*%B%*%Vm%*%t(mat2%*%B) + diag(rep(1,q))\ncov_lbte <- mat1%*%A%*%Vm%*%t(mat2%*%B)\nfn1 <- cov2cor(rbind(cbind(var_te,cov_lbte),cbind(t(cov_lbte),var_lb)))\nout=rbind(out,fn1[1,(p+1):(p+q)])\n}  \nhead(out[,1:5])\npar(mfrow=c(2,2))\ntruehist(out[,1])\ntruehist(out[,2])\ntruehist(out[,3])\ntruehist(out[,4])\n\n\n####\nx=seq(.01,.999,length.out=100)\ny=x/(1/5 + x)\npar(mfrow=c(1,1))\nplot(x,y,type=\"l\",lwd=4)\n\n\n\n\n\n\n\n\n\n\n\n",
+    "created" : 1390101353454.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "6|1|24|0|\n28|1|46|0|\n71|1|79|0|\n",
+    "hash" : "506764014",
+    "id" : "C18457F4",
+    "lastKnownWriteTime" : 1390022485,
+    "path" : "~/Desktop/fmimicme/Prior Checks.R",
+    "properties" : {
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}
